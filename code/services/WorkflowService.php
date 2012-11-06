@@ -144,29 +144,46 @@ class WorkflowService implements PermissionProvider {
 	 */
 	public function usersWorkflows(Member $user) {
 		
-		$all = new DataObjectSet();
-		
 		$groupIds = $user->Groups()->column('ID');
-		$groupJoin = ' INNER JOIN "WorkflowInstance_Groups" "wig" ON "wig"."WorkflowInstanceID" = "WorkflowInstance"."ID"';
+		
+		$groupInstances = null;
+		
+		$filter = array('');
 		
 		if (is_array($groupIds)) {
-			$filter = '("WorkflowStatus" = \'Active\' OR "WorkflowStatus"=\'Paused\') AND "wig"."GroupID" IN (' . implode(',', $groupIds).')';
-			$groupAssigned = DataObject::get('WorkflowInstance', $filter, '"Created" DESC', $groupJoin);
-			if ($groupAssigned) {
-				$all->merge($groupAssigned);
-			}
+//			$filter = '("WorkflowStatus" = \'Active\' OR "WorkflowStatus"=\'Paused\') AND "wig"."GroupID" IN (' . implode(',', $groupIds).')';
+//			$groupAssigned = DataObject::get('WorkflowInstance', $filter, '"Created" DESC', $groupJoin);
+//			if ($groupAssigned) {
+//				$all->merge($groupAssigned);
+//			}
+			$groupInstances = DataList::create('WorkflowInstance')->filter(array('WorkflowStatus:Negation' => 'Complete',  'Group.ID:ExactMatchMulti' => $groupIds));
 		}
-
-		$userJoin = ' INNER JOIN "WorkflowInstance_Users" "wiu" ON "wiu"."WorkflowInstanceID" = "WorkflowInstance"."ID"';
-		$filter = '("WorkflowStatus" = \'Active\' OR "WorkflowStatus"=\'Paused\') AND "wiu"."MemberID" = ' . $user->ID;
-		$userAssigned = DataObject::get('WorkflowInstance', $filter, '"Created" DESC', $userJoin);
-		if ($userAssigned) {
-			$all->merge($userAssigned);
+//
+//		$userJoin = ' INNER JOIN "WorkflowInstance_Users" "wiu" ON "wiu"."WorkflowInstanceID" = "WorkflowInstance"."ID"';
+//		$filter = '("WorkflowStatus" = \'Active\' OR "WorkflowStatus"=\'Paused\') AND "wiu"."MemberID" = ' . $user->ID;
+//		$userAssigned = DataObject::get('WorkflowInstance', $filter, '"Created" DESC', $userJoin);
+//		if ($userAssigned) {
+//			$all->merge($userAssigned);
+//		}
+		$userInstances = DataList::create('WorkflowInstance')->filter(array('WorkflowStatus:Negation' => 'Complete', 'Users.ID:ExactMatch' => $user->ID));
+		
+		if ($userInstances) {
+			$userInstances = $userInstances->toArray();
+		} else {
+			$userInstances = array();
 		}
 		
-		return $all;
+		if ($groupInstances) {
+			$groupInstances = $groupInstances->toArray();
+		} else {
+			$groupInstances = array();
+		}
+
+		$all = array_merge($groupInstances, $userInstances);
+		
+		return ArrayList::create($all);
 	}
-	
+
 
 	/**
 	 * Reorders actions within a definition
