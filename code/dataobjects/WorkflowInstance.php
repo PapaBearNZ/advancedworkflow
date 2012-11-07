@@ -65,15 +65,17 @@ class WorkflowInstance extends DataObject {
 				$fields->push(new CheckboxSetField('Users', _t('WorkflowDefinition.USERS', 'Users'), $cmsUsers));
 				$fields->push(new TreeMultiselectField('Groups', _t('WorkflowDefinition.GROUPS', 'Groups'), 'Group'));
 
-				$action = $this->CurrentAction();
-				if ($action->exists()) {
-					$actionFields = $this->getWorkflowFields();
-
-					$fields->merge($actionFields);
-				}
 			}
 		}
 		
+		if ($this->canEdit()) {
+			$action = $this->CurrentAction();
+			if ($action->exists()) {
+				$actionFields = $this->getWorkflowFields();
+				$fields->merge($actionFields);
+			}
+		}
+
 		$items = WorkflowActionInstance::get()->filter(array(
 			'Finished'		=> 1,
 			'WorkflowID'	=> $this->ID
@@ -183,11 +185,15 @@ class WorkflowInstance extends DataObject {
 		$action = $definition->getInitialAction()->getInstanceForWorkflow();
 		$action->WorkflowID   = $this->ID;
 		$action->write();
+		
+		$title = $for && $for->hasField('Title') ? 
+				sprintf(_t('WorkflowInstance.TITLE_FOR_DO', '%s - %s'), $definition->Title, $for->Title) :
+				sprintf(_t('WorkflowInstance.TITLE_STUB', 'Instance #%s of %s'), $this->ID, $definition->Title);
 
-		$this->Title = sprintf(_t('WorkflowInstance.TITLE_STUB', 'Instance #%s of %s'), $this->ID, $definition->Title);
+		$this->Title		   = $title;
 		$this->DefinitionID    = $definition->ID;
 		$this->CurrentActionID = $action->ID;
-		$this->InitiatorID = Member::currentUserID();
+		$this->InitiatorID     = Member::currentUserID();
 		$this->write();
 
 		$this->Users()->addMany($definition->Users());
