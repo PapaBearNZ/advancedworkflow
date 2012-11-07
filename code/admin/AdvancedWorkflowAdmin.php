@@ -34,7 +34,7 @@ class AdvancedWorkflowAdmin extends ModelAdmin {
 			$grid = GridField::create('AssignedWorkflows', 'Items waiting for you', $assigned, $config);
 			$grid->setForm($form);
 
-			$form->Fields()->push($grid);
+			$form->Fields()->insertBefore($grid, 'WorkflowDefinition');
 		}
 
 		$submitted = $this->workflowService->userSubmissions(Member::currentUser());
@@ -47,7 +47,7 @@ class AdvancedWorkflowAdmin extends ModelAdmin {
 			$grid = GridField::create('SubmittedWorkflows', 'Items you have submitted', $submitted, $config);
 			$grid->setForm($form);
 
-			$form->Fields()->push($grid);
+			$form->Fields()->insertBefore($grid, 'WorkflowDefinition');
 		}
 
 		return $form;
