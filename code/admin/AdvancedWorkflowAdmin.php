@@ -26,15 +26,17 @@ class AdvancedWorkflowAdmin extends ModelAdmin {
 		
 		$assigned = $this->workflowService->usersWorkflows(Member::currentUser());
 		
-		$config = new GridFieldConfig_Base();
-		$config->addComponent(new GridFieldEditButton());
-		$config->addComponent(new GridFieldDetailForm());
+		if ($assigned->count()) {
+			$config = new GridFieldConfig_Base();
+			$config->addComponent(new GridFieldEditButton());
+			$config->addComponent(new GridFieldDetailForm());
 
-		$grid = GridField::create('AssignedWorkflows', 'Items waiting for you', $assigned, $config);
-		$grid->setForm($form);
-		
-		$form->Fields()->push($grid);
-		
+			$grid = GridField::create('AssignedWorkflows', 'Items waiting for you', $assigned, $config);
+			$grid->setForm($form);
+
+			$form->Fields()->push($grid);
+		}
+
 		return $form;
 	}
 
