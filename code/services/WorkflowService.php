@@ -151,20 +151,9 @@ class WorkflowService implements PermissionProvider {
 		$filter = array('');
 		
 		if (is_array($groupIds)) {
-//			$filter = '("WorkflowStatus" = \'Active\' OR "WorkflowStatus"=\'Paused\') AND "wig"."GroupID" IN (' . implode(',', $groupIds).')';
-//			$groupAssigned = DataObject::get('WorkflowInstance', $filter, '"Created" DESC', $groupJoin);
-//			if ($groupAssigned) {
-//				$all->merge($groupAssigned);
-//			}
 			$groupInstances = DataList::create('WorkflowInstance')->filter(array('WorkflowStatus:Negation' => 'Complete',  'Group.ID:ExactMatchMulti' => $groupIds));
 		}
-//
-//		$userJoin = ' INNER JOIN "WorkflowInstance_Users" "wiu" ON "wiu"."WorkflowInstanceID" = "WorkflowInstance"."ID"';
-//		$filter = '("WorkflowStatus" = \'Active\' OR "WorkflowStatus"=\'Paused\') AND "wiu"."MemberID" = ' . $user->ID;
-//		$userAssigned = DataObject::get('WorkflowInstance', $filter, '"Created" DESC', $userJoin);
-//		if ($userAssigned) {
-//			$all->merge($userAssigned);
-//		}
+
 		$userInstances = DataList::create('WorkflowInstance')->filter(array('WorkflowStatus:Negation' => 'Complete', 'Users.ID:ExactMatch' => $user->ID));
 		
 		if ($userInstances) {
@@ -184,6 +173,16 @@ class WorkflowService implements PermissionProvider {
 		return ArrayList::create($all);
 	}
 
+	/**
+	 * Get items that the passed in user has submitted for workflow review
+	 * 
+	 * @param Member $member 
+	 */
+	public function userSubmissions(Member $user) {
+		$userInstances = DataList::create('WorkflowInstance')->filter(array('WorkflowStatus:Negation' => 'Complete', 'InitiatorID' => $user->ID));
+		
+		return $userInstances;
+	}
 
 	/**
 	 * Reorders actions within a definition

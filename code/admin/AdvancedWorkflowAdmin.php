@@ -37,6 +37,19 @@ class AdvancedWorkflowAdmin extends ModelAdmin {
 			$form->Fields()->push($grid);
 		}
 
+		$submitted = $this->workflowService->userSubmissions(Member::currentUser());
+
+		if ($submitted->count()) {
+			$config = new GridFieldConfig_Base();
+			$config->addComponent(new GridFieldEditButton());
+			$config->addComponent(new GridFieldDetailForm());
+
+			$grid = GridField::create('SubmittedWorkflows', 'Items you have submitted', $submitted, $config);
+			$grid->setForm($form);
+
+			$form->Fields()->push($grid);
+		}
+
 		return $form;
 	}
 
