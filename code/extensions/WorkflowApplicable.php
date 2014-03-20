@@ -31,6 +31,22 @@ class WorkflowApplicable extends DataExtension {
 	 */
 	protected $currentInstance;
 	
+	/**
+	 * Should we disable the checks around whether the item can
+	 * be published or not?
+	 *
+	 * @var boolean
+	 */
+	protected $disablePublishCheck = false;
+	
+	/**
+	 * Disable checking for the presence of a workflow
+	 * definition when determining if publish is allowed
+	 */
+	public function disablePublishCheck() {
+		$this->disablePublishCheck = true;
+	}
+	
 	public function updateSettingsFields(FieldList $fields) {
 		$this->updateFields($fields);
 	}
@@ -215,13 +231,17 @@ class WorkflowApplicable extends DataExtension {
 		if ($active = $this->getWorkflowInstance()) {
 			return $active->canPublishTarget($this->owner);
 		}
+		
+		// return null if we've been marked to ignore the existence of a workflow definition
+		if ($this->disablePublishCheck) {
+			return;
+		}
 
 		// otherwise, see if there's any workflows applied. If there are, then we shouldn't be able
 		// to directly publish
 		if ($effective = $this->workflowService->getDefinitionFor($this->owner)) {
 			return false;
 		}
-
 	}
 
 	/**

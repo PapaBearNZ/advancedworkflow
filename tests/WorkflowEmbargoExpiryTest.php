@@ -14,7 +14,7 @@ class WorkflowEmbargoExpiryTest extends SapphireTest {
 		parent::__construct();
 		
 		$this->requiredExtensions = array(
-			'Page'		=> array('WorkflowEmbargoExpiryExtension')
+			'SiteTree'		=> array('WorkflowApplicable', 'WorkflowEmbargoExpiryExtension')
 		);
 	}
 	
@@ -75,6 +75,41 @@ class WorkflowEmbargoExpiryTest extends SapphireTest {
 		$this->assertTrue($page->UnPublishJobID > 0);
 	}
 	
+	
+	public function testPublishAfterWorkflowCompletes() {
+		
+		Versioned::reading_stage('Stage');
+		
+		$action = new PublishItemWorkflowAction;
+		$instance = new WorkflowInstance();
+		
+		$page = new Page();
+		$page->Title = 'stuff';
+		$page->DesiredPublishDate = '2020-02-01 00:00:00';
+		$page->DesiredUnPublishDate = '2020-02-01 02:00:00';
+		$page->write();
+
+		
+		// apply a definition so that our canpublish will return false
+		$definition = $this->createDefinition();
+		
+		$page->WorkflowDefinitionID = $definition->ID;
+		$page->write();
+		
+		$this->assertFalse($page->getExistsOnLive());
+		
+		$this->logInWithPermission('CMS_ACCESS_CMSMain');
+		
+		$canPublish = $page->canPublish();
+		$this->assertFalse($canPublish);
+		
+		// now try publishing using the page using the job;
+		$job = new WorkflowPublishTargetJob($page);
+
+		$job->process();
+
+		$this->assertTrue($page->getExistsOnLive());
+	}
 	
 
 	protected function createDefinition() {

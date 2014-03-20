@@ -20,6 +20,13 @@ class WorkflowPublishTargetJob extends AbstractQueuedJob {
 
 	public function process() {
 		if ($target = $this->getObject()) {
+			
+			// if we're running with a workflow applied, need to 
+			// temporarily disable the 'canPublish' check in it
+			if ($target->hasExtension('WorkflowApplicable')) {
+				$target->disablePublishCheck();
+			}
+
 			if ($this->publishType == 'publish') {
 				$target->PublishOnDate = '';
 				$target->writeWithoutVersion();
